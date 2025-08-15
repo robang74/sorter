@@ -76,7 +76,6 @@ echo Sorting $KERNEL modules from $BASEPATH
 # Packing up
 
 packup kvm-$KERNEL arch/x86/kvm/*
-packup filesystems-$KERNEL fs/[bcehjmrux]*/* fs/nfsd/* fs/nfs fs/nilfs2
 packup alsa-modules-$KERNEL sound
 packup bluetooth-$KERNEL net/bluetooth drivers/bluetooth
 #packup irda-$KERNEL net/irda drivers/net/irda drivers/usb/serial/ir-usb*
@@ -84,6 +83,12 @@ packup net-bridging-$KERNEL net/bridge
 packup net-sched-$KERNEL net/sched
 packup ipv6-netfilter-$KERNEL net/ipv6 net/ipv4 net/netfilter
 packup wireless-$KERNEL net/mac80211 net/wireless drivers/net/wireless
+
+# Needs to go to the base.
+mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/gpu/drm/drm.ko* /tmp
+mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/video/backlight/backlight.ko* /tmp
+mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/char/agp/agpgart.ko* /tmp
+
 packup nouveau-$KERNEL drivers/gpu/drm/nouveau
 packup graphics-$KERNEL drivers/char/agp drivers/gpu drivers/usb/misc/sisusbvga
 packup firewire-$KERNEL drivers/firewire
@@ -105,11 +110,13 @@ packup ax25-$KERNEL net/ax25 net/rose net/netrom drivers/net/hamradio
 mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/scsi/hv_* /tmp
 mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/scsi/scsi_transport_fc* /tmp
 mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/media/cec/core/cec.ko* /tmp
+mv ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/fs/exfat* /tmp
 
 packup scsi-$KERNEL drivers/scsi drivers/message
 packup l2tp-$KERNEL net/l2tp
 packup sctp-$KERNEL net/sctp
 packup v4l-dvb-$KERNEL drivers/media drivers/usb/misc/isight*
+packup filesystems-$KERNEL fs/[bcehjmrux]*/* fs/nfsd/* fs/nfs fs/nilfs2
 
 # Meta-extension for original modules
 EMPTYD=`mktemp -d`
@@ -121,8 +128,15 @@ zsyncmake -u original-modules-$KERNEL.tcz original-modules-$KERNEL.tcz
 rm -rf $EMPTYD
 
 # The rest goes to the base.
+# Put the ones moved manually back
+mv /tmp/drm.ko* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/gpu/drm/
+mv /tmp/backlight.ko* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/video/backlight/
+mv /tmp/agpgart.ko* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/char/agp/
 
-mv /tmp/hv_* /tmp/scsi_transport_fc* /tmp/cec.ko* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/scsi/
+mv /tmp/hv_* /tmp/scsi_transport_fc* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/scsi/
+mv /tmp/cec.ko* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/drivers/media/cec/core/
+mv /tmp/exfat* ${BASEPATH}/usr/local/lib/modules/${KERNEL}/kernel/fs/
+
 cd ${BASEPATH}/usr/local
 ln -sf /usr/local/lib/modules/${KERNEL}/kernel/ lib/modules/${KERNEL}/kernel.tclocal
 mkdir -p usr/local/lib/modules/${KERNEL}/kernel/
